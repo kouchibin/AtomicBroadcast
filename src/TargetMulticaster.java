@@ -8,12 +8,13 @@ public class TargetMulticaster extends Multicaster {
      */
     public TargetMulticaster() {
         multicaster = new ReliableMulticaster();
-        // multicaster = new FIFODecorator(multicaster);
+        multicaster = new FIFODecorator(multicaster);
         // multicaster = new CausalDecorator(multicaster);
         // multicaster = new TotalDecorator(multicaster);
     }
 
     public void init() {
+        multicaster.init();
     }
 
     public void cast(String messagetext) {
@@ -21,6 +22,7 @@ public class TargetMulticaster extends Multicaster {
     }
 
     public void basicreceive(int peer, Message message) {
+        System.out.println("basicreceive called");
         multicaster.basicreceive(peer, message);
     }
 
