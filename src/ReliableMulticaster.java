@@ -18,7 +18,6 @@ public class ReliableMulticaster extends BasicMulticaster {
 
     @Override
     public <M extends Message> void cast(M message) {
-        System.out.println("In Reliable:" + message.getClass().getName());
         sendToAll(new ReliableMessage<M>(message));
     }
 

@@ -6,16 +6,12 @@ public class TargetMulticaster extends Multicaster implements Receiver{
     /**
      * This is the place to assemble the target multicaster.
      */
-    public TargetMulticaster() {
-
-        //multicaster = new FIFODecorator<TargetMessage>(multicaster);
-        // multicaster = new CausalDecorator<FIFOMessage>(multicaster);
-        // multicaster = new TotalDecorator(multicaster);
-    }
+    public TargetMulticaster() {}
 
     @Override
     public void init() {
         multicaster = new ReliableMulticaster(bcom, id, hosts);
+        multicaster = new TotalDecorator(multicaster, bcom);
         multicaster = new FIFODecorator(multicaster);
         multicaster = new CausalDecorator(multicaster);
         multicaster.setUpperLayer(this);
@@ -34,7 +30,6 @@ public class TargetMulticaster extends Multicaster implements Receiver{
     }
 
     public void basicreceive(int peer, Message message) {
-        System.out.println("basicreceive called");
         multicaster.basicreceive(peer, message);
     }
 
