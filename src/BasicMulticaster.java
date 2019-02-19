@@ -1,9 +1,9 @@
 import mcgui.*;
 
-public abstract class BasicMulticaster<M> extends Sender<M> {
+public abstract class BasicMulticaster extends Sender {
     int id;
     int hosts;
-    public abstract void cast(M m);
+    public abstract <M extends Message> void cast(M m);
 
     public abstract void basicreceive(int peer, Message m);
 

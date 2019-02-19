@@ -1,8 +1,8 @@
-public class Sender<M> {
+public class Sender {
 
-    protected Receiver<M> upperLayer;
+    protected Receiver upperLayer;
 
-    public void setUpperLayer(Receiver<M> upperLayer) {
+    public void setUpperLayer(Receiver upperLayer) {
         this.upperLayer = upperLayer;
     }
 }

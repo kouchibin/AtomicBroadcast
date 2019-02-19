@@ -1,7 +1,7 @@
 import mcgui.*;
 
-public class TargetMulticaster extends Multicaster implements Receiver<TargetMessage>{
-    private BasicMulticaster<TargetMessage> multicaster;
+public class TargetMulticaster extends Multicaster implements Receiver{
+    private BasicMulticaster multicaster;
 
     /**
      * This is the place to assemble the target multicaster.
@@ -15,9 +15,9 @@ public class TargetMulticaster extends Multicaster implements Receiver<TargetMes
 
     @Override
     public void init() {
-        multicaster = new ReliableMulticaster<>(bcom, id, hosts);
-        multicaster = new FIFODecorator<>(multicaster);
-        multicaster = new CausalDecorator<>(multicaster);
+        multicaster = new ReliableMulticaster(bcom, id, hosts);
+        multicaster = new FIFODecorator(multicaster);
+        multicaster = new CausalDecorator(multicaster);
         multicaster.setUpperLayer(this);
     }
 
@@ -28,8 +28,9 @@ public class TargetMulticaster extends Multicaster implements Receiver<TargetMes
     }
 
     @Override
-    public void deliver(TargetMessage m) {
-        mcui.deliver(m.getSender(), m.text);
+    public <M extends Message> void deliver(M m) {
+        TargetMessage msg = (TargetMessage) m;
+        mcui.deliver(msg.getSender(), msg.text);
     }
 
     public void basicreceive(int peer, Message message) {

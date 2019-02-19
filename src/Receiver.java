@@ -1,3 +1,5 @@
-public interface Receiver<M> {
-    public abstract void deliver(M m);
+import mcgui.*;
+
+public interface Receiver {
+    public abstract <M extends Message> void deliver(M m);
 }

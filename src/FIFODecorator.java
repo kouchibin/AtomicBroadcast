@@ -3,7 +3,7 @@ import mcgui.*;
 
 import java.util.*;
 
-public class FIFODecorator<M extends Message> extends BasicMulticaster<M> implements Receiver<M> {
+public class FIFODecorator extends BasicMulticaster implements Receiver {
 
     private BasicMulticaster multicaster;
     private List<Integer> next;
@@ -32,7 +32,7 @@ public class FIFODecorator<M extends Message> extends BasicMulticaster<M> implem
     }
 
     @Override
-    public void cast(M m) {
+    public <M extends Message> void cast(M m) {
         System.out.println("In FIFO:" + m.getClass().getName());
         FIFOMessage<M> message = new FIFOMessage<M>(sequence++, m);
         multicaster.cast(message);
@@ -50,7 +50,7 @@ public class FIFODecorator<M extends Message> extends BasicMulticaster<M> implem
     }
 
     @Override
-    public void deliver(M m) {
+    public <M extends Message> void deliver(M m) {
         FIFOMessage fifoMsg = (FIFOMessage)m;
         int sender = fifoMsg.getSender();
         Set<FIFOMessage> undelivered_msgs_in_channel = undelivered_msgs.get(sender);
@@ -61,7 +61,7 @@ public class FIFODecorator<M extends Message> extends BasicMulticaster<M> implem
     private void deliverAllDeliverable(Set<FIFOMessage> undelivered_msgs_in_channel, int sender) {
         while (true) {
             boolean found = false;
-            for (FIFOMessage<M> msg : undelivered_msgs_in_channel) {
+            for (FIFOMessage msg : undelivered_msgs_in_channel) {
                 if (msg.seq == next.get(sender)) {
                     found = true;
                     upperLayer.deliver(msg.message);

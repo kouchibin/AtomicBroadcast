@@ -4,7 +4,7 @@ import mcgui.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class ReliableMulticaster<M extends Message> extends BasicMulticaster<M> {
+public class ReliableMulticaster extends BasicMulticaster {
 
     BasicCommunicator bcom;
     Set<Integer> deliveredMessagesHash = new HashSet<>();
@@ -17,7 +17,7 @@ public class ReliableMulticaster<M extends Message> extends BasicMulticaster<M> 
     }
 
     @Override
-    public void cast(M message) {
+    public <M extends Message> void cast(M message) {
         System.out.println("In Reliable:" + message.getClass().getName());
         sendToAll(new ReliableMessage<M>(message));
     }
@@ -29,7 +29,7 @@ public class ReliableMulticaster<M extends Message> extends BasicMulticaster<M> 
             if (message.getSender() != id) {
                 sendToAll(message);
             }
-            ReliableMessage<M> msg = (ReliableMessage<M>) message;
+            ReliableMessage msg = (ReliableMessage) message;
             upperLayer.deliver(msg.message);
         }
 

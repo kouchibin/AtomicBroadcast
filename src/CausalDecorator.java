@@ -3,11 +3,11 @@ import mcgui.*;
 
 import java.util.*;
 
-public class CausalDecorator<M extends Message> extends BasicMulticaster<M> implements Receiver<M> {
+public class CausalDecorator extends BasicMulticaster implements Receiver {
 
     private BasicMulticaster multicaster;
 
-    private List<M> prevDel;
+    private List<Message> prevDel;
     private Set<Integer> delivered;
 
     public CausalDecorator(BasicMulticaster mt) {
@@ -21,15 +21,15 @@ public class CausalDecorator<M extends Message> extends BasicMulticaster<M> impl
     }
 
     @Override
-    public void cast(M m) {
+    public <M extends Message> void cast(M m) {
         System.out.println("In causal:" + m.getClass().getName());
-        CausalMessage<M> message = new CausalMessage<>(prevDel, m);
+        CausalMessage<M> message = new CausalMessage<M>(prevDel, m);
         multicaster.cast(message);
         prevDel.clear();
     }
 
     @Override
-    public void deliver(M msg) {
+    public <M extends Message> void deliver(M msg) {
         CausalMessage<M> cm = (CausalMessage<M>) msg;
         for (M m : cm.msgList) {
             if (delivered.contains(m.hashCode()))
@@ -55,9 +55,9 @@ public class CausalDecorator<M extends Message> extends BasicMulticaster<M> impl
 
 class CausalMessage<M extends Message> extends Message {
     List<M> msgList;
-    public CausalMessage(List<M> prevDel, M message) {
+    public CausalMessage(List<Message> prevDel, M message) {
         super(message.getSender());
-        msgList = new ArrayList<M>(prevDel);
+        msgList = new ArrayList<M>((List<M>)prevDel);
         msgList.add(message);
     }
 
