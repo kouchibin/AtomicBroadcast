@@ -4,69 +4,33 @@ import mcgui.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class ReliableMulticaster extends Multicaster {
+public class ReliableMulticaster<M extends Message> extends BasicMulticaster<M> {
 
+    BasicCommunicator bcom;
     Set<Integer> deliveredMessagesHash = new HashSet<>();
-    Multicaster upperLayer = null;
     int sequenceNumber = 0;
 
-    public void init() {
-        mcui.debug("The network has "+hosts+" hosts!");
+    public ReliableMulticaster(BasicCommunicator bcom, int id, int hosts) {
+        this.bcom = bcom;
+        this.id = id;
+        this.hosts = hosts;
     }
 
-    /**
-     * The GUI calls this module to multicast a message
-     */
-    public void cast(String messagetext) {
-        // Intercept to run tryToBreakFIFO() to emulate faults.
-        if (messagetext.equals("break")) {
-            tryToBreakFIFO();
-            return;
-        }
-
-        sendToAll(new MulticastMessage(id, sequenceNumber++, messagetext));
-        mcui.debug("Sent out: \""+messagetext+"\"");
+    @Override
+    public void cast(M message) {
+        System.out.println("In Reliable:" + message.getClass().getName());
+        sendToAll(new ReliableMessage<M>(message));
     }
 
-    public void tryToBreakFIFO() {
-        List<MulticastMessage> msgs = new ArrayList<>(10);
-        for (int i = 0; i < 10; i++) {
-            msgs.add(new MulticastMessage(id, sequenceNumber, "" + id + "-" + sequenceNumber));
-            sequenceNumber++;
-        }
-        Collections.shuffle(msgs);
-        for (MulticastMessage msg : msgs)
-            sendToAll(msg);
-    }
-
-    public void cast(Message message) {
-        if ((message instanceof MulticastMessage) &&
-            ((MulticastMessage)message).text.equals("break")) {
-            tryToBreakFIFO();
-            return;
-        }
-        sendToAll(message);
-        System.out.println("Sent out MulticastMessage: \""+message+"\"");
-    }
-
-    /**
-     * Receive a basic message
-     * @param message  The message received
-     */
+    @Override
     public void basicreceive(int peer, Message message) {
-
         if (deliveredMessagesHash.add(message.hashCode())) {
+            System.out.println(message.hashCode());
             if (message.getSender() != id) {
                 sendToAll(message);
             }
-            if (upperLayer == null) {
-                assert (message instanceof MulticastMessage);
-                mcui.deliver(peer, ((MulticastMessage)message).text);
-            }
-            else{
-                mcui.debug("delivering to upperLayer.");
-                ((MulticastDecorator)upperLayer).deliver(message);
-            }
+            ReliableMessage<M> msg = (ReliableMessage<M>) message;
+            upperLayer.deliver(msg.message);
         }
 
     }
@@ -77,13 +41,23 @@ public class ReliableMulticaster extends Multicaster {
         }
     }
 
-    /**
-     * Signals that a peer is down and has been down for a while to
-     * allow for messages taking different paths from this peer to
-     * arrive.
-     * @param peer	The dead peer
-     */
+    @Override
     public void basicpeerdown(int peer) {
-        mcui.debug("Peer "+peer+" has been dead for a while now!");
+
+    }
+}
+
+class ReliableMessage<T extends Message> extends Message {
+    public final T message;
+
+    public ReliableMessage(T m) {
+        super(m.getSender());
+        message = m;
+    }
+
+    public int hashCode() {
+        int hash = 7;
+        hash = 37 * hash + message.hashCode();
+        return hash;
     }
 }

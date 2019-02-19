@@ -1,24 +1,35 @@
 import mcgui.*;
 
-public class TargetMulticaster extends Multicaster {
-    private Multicaster multicaster;
+public class TargetMulticaster extends Multicaster implements Receiver<TargetMessage>{
+    private BasicMulticaster<TargetMessage> multicaster;
 
     /**
      * This is the place to assemble the target multicaster.
      */
     public TargetMulticaster() {
-        multicaster = new ReliableMulticaster();
-        multicaster = new FIFODecorator(multicaster);
-        // multicaster = new CausalDecorator(multicaster);
+
+        //multicaster = new FIFODecorator<TargetMessage>(multicaster);
+        // multicaster = new CausalDecorator<FIFOMessage>(multicaster);
         // multicaster = new TotalDecorator(multicaster);
     }
 
+    @Override
     public void init() {
-        multicaster.init();
+        multicaster = new ReliableMulticaster<>(bcom, id, hosts);
+        multicaster = new FIFODecorator<>(multicaster);
+        multicaster = new CausalDecorator<>(multicaster);
+        multicaster.setUpperLayer(this);
     }
 
+    @Override
     public void cast(String messagetext) {
-        multicaster.cast(messagetext);
+        TargetMessage targetMsg = new TargetMessage(id, messagetext);
+        multicaster.cast(targetMsg);
+    }
+
+    @Override
+    public void deliver(TargetMessage m) {
+        mcui.deliver(m.getSender(), m.text);
     }
 
     public void basicreceive(int peer, Message message) {
@@ -30,19 +41,25 @@ public class TargetMulticaster extends Multicaster {
         multicaster.basicpeerdown(peer);
     }
 
-    public void setId(int id, int host) {
-        multicaster.setId(id, host);
+}
+
+class TargetMessage extends Message {
+
+    private static int counter = 0;
+
+    public final String text;
+    public final int seq;
+    public TargetMessage(int sender, String text) {
+        super(sender);
+        this.text = text;
+        seq = counter++;
     }
 
-    public void setCommunicator(BasicCommunicator bcom) {
-        multicaster.setCommunicator(bcom);
-    }
-
-    public void setUI(MulticasterUI mcui) {
-        multicaster.setUI(mcui);
-    }
-
-    public void enableUI() {
-        multicaster.enableUI();
+    public int hashCode() {
+        int hash = 7;
+        hash = 37 * hash + sender;
+        hash = 37 * hash + seq;
+        hash = 37 * hash + text.hashCode();
+        return hash;
     }
 }
