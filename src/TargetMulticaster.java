@@ -12,8 +12,8 @@ public class TargetMulticaster extends Multicaster implements Receiver{
     public void init() {
         multicaster = new ReliableMulticaster(bcom, id, hosts);
         multicaster = new TotalDecorator(multicaster, bcom);
-        multicaster = new FIFODecorator(multicaster);
-        multicaster = new CausalDecorator(multicaster);
+        // multicaster = new FIFODecorator(multicaster);
+        // multicaster = new CausalDecorator(multicaster);
         multicaster.setUpperLayer(this);
     }
 
@@ -29,11 +29,14 @@ public class TargetMulticaster extends Multicaster implements Receiver{
         mcui.deliver(msg.getSender(), msg.text);
     }
 
+    @Override
     public void basicreceive(int peer, Message message) {
         multicaster.basicreceive(peer, message);
     }
 
+    @Override
     public void basicpeerdown(int peer) {
+        System.out.println("In TargetMulticaster, basicpeerdown called.");
         multicaster.basicpeerdown(peer);
     }
 

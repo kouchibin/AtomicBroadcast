@@ -53,7 +53,6 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
         pm.msg = request.message;
         pm.isDeliverable = false;
 
-        // TODO: insert the request to the correct position
         holdback.add(pm);
         deliverAllDeliverableFromHoldback();
     }
@@ -73,17 +72,20 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
             System.out.println("add result:" + result + " suggest:" + suggest + " hash:" +suggest.hashCode() );
             suggestions.put(mid, msgSug);
             // TODO: Needs to handle node crashes.
-            if (msgSug.size() == hosts)
-                decideAndCastSeq(mid, msgSug);
+            System.out.println("msgSug size: " + msgSug.size() + " hosts:" + hosts);
         } else {
             TreeSet<SeqSuggest> set = new TreeSet<>();
             set.add(suggest);
             suggestions.put(mid, set);
         }
+        decideAndCastSeq(mid);
         System.out.println(suggestions);
     }
 
-    private void decideAndCastSeq(int mid, TreeSet<SeqSuggest> msgSug) {
+    private void decideAndCastSeq(int mid) {
+        TreeSet<SeqSuggest> msgSug = suggestions.get(mid);
+        if (msgSug.size() != hosts)
+            return;
         SeqSuggest last = msgSug.pollLast();
         int seqDecision = last.suggestSeq;
         int suggester = last.suggester;
@@ -141,7 +143,30 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
 
     @Override
     public void basicpeerdown(int peer){
+        System.out.println("in basicpeerdown 1:" +hosts);
+        hosts--;
+        System.out.println("in basicpeerdown 2:" +hosts);
+        for (Integer mid : suggestions.keySet()) {
+            decideAndCastSeq(mid);
+        }
+        removePendingMessageFromHoldbackByOwner(peer);
+        deliverAllDeliverableFromHoldback();
         multicaster.basicpeerdown(peer);
+    }
+
+    private void removePendingMessageFromHoldbackByOwner(int owner) {
+        while (true) {
+            boolean modified = false;
+            for (PendingMessage pm : holdback) {
+                if (pm.tag.owner == owner) {
+                    holdback.remove(pm);
+                    modified = true;
+                    break;
+                }
+            }
+            if (!modified)
+                break;
+        }
     }
 
     private class PendingMessage implements Comparable<PendingMessage> {

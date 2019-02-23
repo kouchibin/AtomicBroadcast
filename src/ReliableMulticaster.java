@@ -8,12 +8,15 @@ public class ReliableMulticaster extends BasicMulticaster {
 
     BasicCommunicator bcom;
     Set<Integer> deliveredMessagesHash = new HashSet<>();
+    Set<Integer> liveNodes = new HashSet<>();
     int sequenceNumber = 0;
 
     public ReliableMulticaster(BasicCommunicator bcom, int id, int hosts) {
         this.bcom = bcom;
         this.id = id;
         this.hosts = hosts;
+        for (int i = 0; i < hosts; i++)
+            liveNodes.add(i);
     }
 
     @Override
@@ -35,14 +38,15 @@ public class ReliableMulticaster extends BasicMulticaster {
     }
 
     public void sendToAll(Message message) {
-        for(int i=0; i < hosts; i++) {
-            bcom.basicsend(i, message);
+        for(Integer node : liveNodes) {
+            bcom.basicsend(node, message);
         }
     }
 
     @Override
     public void basicpeerdown(int peer) {
-
+        hosts--;
+        liveNodes.remove(peer);
     }
 }
 
