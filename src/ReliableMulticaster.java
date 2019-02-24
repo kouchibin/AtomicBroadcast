@@ -27,7 +27,6 @@ public class ReliableMulticaster extends BasicMulticaster {
     @Override
     public void basicreceive(int peer, Message message) {
         if (deliveredMessagesHash.add(message.hashCode())) {
-            System.out.println(message.hashCode());
             if (message.getSender() != id) {
                 sendToAll(message);
             }

@@ -17,12 +17,10 @@ public class CausalDecorator extends BasicMulticaster implements Receiver {
         hosts = mt.hosts;
         delivered = new HashSet<>();
         prevDel = new ArrayList<>();
-        System.out.println("In causal:" + multicaster.getClass().getName());
     }
 
     @Override
     public <M extends Message> void cast(M m) {
-        System.out.println("In causal:" + m.getClass().getName());
         CausalMessage<M> message = new CausalMessage<M>(prevDel, m);
         multicaster.cast(message);
         prevDel.clear();

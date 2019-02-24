@@ -16,7 +16,6 @@ public class FIFODecorator extends BasicMulticaster implements Receiver {
         hosts = mt.hosts;
         id = mt.id;
         init();
-        System.out.println("In FIFO:" + multicaster.getClass().getName());
     }
 
     @Override
@@ -33,7 +32,6 @@ public class FIFODecorator extends BasicMulticaster implements Receiver {
 
     @Override
     public <M extends Message> void cast(M m) {
-        System.out.println("In FIFO:" + m.getClass().getName());
         FIFOMessage<M> message = new FIFOMessage<M>(sequence++, m);
         multicaster.cast(message);
     }
@@ -45,7 +43,6 @@ public class FIFODecorator extends BasicMulticaster implements Receiver {
 
     @Override
     public void basicreceive(int peer, Message message) {
-        System.out.println("basicreceive called");
         multicaster.basicreceive(peer, message);
     }
 
@@ -65,7 +62,6 @@ public class FIFODecorator extends BasicMulticaster implements Receiver {
                 if (msg.seq == next.get(sender)) {
                     found = true;
                     upperLayer.deliver(msg.message);
-                    System.out.println("FIFO delivering to upperLayer.");
                     undelivered_msgs_in_channel.remove(msg);
                     next.set(sender, next.get(sender)+1);
                     break;

@@ -36,7 +36,6 @@ public class TargetMulticaster extends Multicaster implements Receiver{
 
     @Override
     public void basicpeerdown(int peer) {
-        System.out.println("In TargetMulticaster, basicpeerdown called.");
         multicaster.basicpeerdown(peer);
     }
 

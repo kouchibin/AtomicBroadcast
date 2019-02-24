@@ -40,7 +40,6 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
     }
 
     private void handleSeqRequest(SeqRequest request) {
-        System.out.println("In handleSeqRequest.");
         seq++;
         SeqSuggest suggest = new SeqSuggest(request.tag, seq, id);
         multicaster.cast(suggest);
@@ -58,28 +57,20 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
     }
 
     private void handleSeqSuggest(SeqSuggest suggest) {
-        System.out.println("In handleSeqSuggest.");
         // Not intended for us
         if (id != suggest.tag.owner)
             return;
-        System.out.println("Owner handling SeqSuggest.");
         int mid = suggest.tag.mid;
         if (suggestions.containsKey(mid)) {
-            System.out.println("Indeed containsKey : " + mid);
             TreeSet<SeqSuggest> msgSug = suggestions.get(mid);
             boolean result = msgSug.add(suggest);
-            System.out.println("same? :" + msgSug.first().equals(suggest));
-            System.out.println("add result:" + result + " suggest:" + suggest + " hash:" +suggest.hashCode() );
             suggestions.put(mid, msgSug);
-            // TODO: Needs to handle node crashes.
-            System.out.println("msgSug size: " + msgSug.size() + " hosts:" + hosts);
         } else {
             TreeSet<SeqSuggest> set = new TreeSet<>();
             set.add(suggest);
             suggestions.put(mid, set);
         }
         decideAndCastSeq(mid);
-        System.out.println(suggestions);
     }
 
     private void decideAndCastSeq(int mid) {
@@ -101,12 +92,10 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
         suggestions.remove(mid);
         MsgIdTag tag = new MsgIdTag(mid, id);
         SeqDecide de = new SeqDecide(tag, seqDecision, suggester);
-        System.out.println(de);
         multicaster.cast(de);
     }
 
     private void handleSeqDecide(SeqDecide de) {
-        System.out.println("In handleSeqDecide.");
         seq = Math.max(seq, de.seqDecision);
         PendingMessage target = null;
 
@@ -123,9 +112,7 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
         target.suggestedSeq = de.seqDecision;
         target.suggester = de.suggester;
         target.isDeliverable = true;
-        System.out.println("holdback:" + holdback);
         holdback.add(target);
-        System.out.println("holdback:" + holdback);
         deliverAllDeliverableFromHoldback();
     }
 
@@ -143,9 +130,7 @@ public class TotalDecorator extends BasicMulticaster implements Receiver {
 
     @Override
     public void basicpeerdown(int peer){
-        System.out.println("in basicpeerdown 1:" +hosts);
         hosts--;
-        System.out.println("in basicpeerdown 2:" +hosts);
         for (Integer mid : suggestions.keySet()) {
             decideAndCastSeq(mid);
         }
